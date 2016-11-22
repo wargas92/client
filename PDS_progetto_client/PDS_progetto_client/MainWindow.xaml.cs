@@ -87,26 +87,77 @@ namespace PDS_progetto_client
             s = new Socket(ipe.AddressFamily, SocketType.Stream, ProtocolType.Tcp);
             string str = "";
             bool bR = true;
-
+            List<string> process;
+            List<string> processes;
             s.Connect(ipe);
+            int focusOn = -1;
             while (true)
             {
                 bR = true;
-                str.Remove(0,str.Length);
+              str =  str.Remove(0,str.Length);
+                
                 while (bR)
                 {
                         bR = (s.Receive(bufferR, 0, 1024, 0) == 1024);
                     str = str + Encoding.UTF8.GetString(bufferR);
                 }
-                List<string> processes = str.Split('\n').ToList<string>();
-                for (int i = 0; i < processes.Count - 1; i++)
-                {
-                    List<string> process = processes[i].Split(',').ToList<string>();
+              processes  = str.Split('\n').ToList<string>();
+                switch (processes[0]){
+                    case "?I":
+                          for (int i = 1; i < processes.Count - 1; i++){
+                          
+                                    process = processes[i].Split(',').ToList<string>();
+                                    items.Add(new Process() { Pid = int.Parse(process[0]), Name = process[1], cName = process.Count >= 3 ? process[2] : "", wName = process.Count >= 4 ? process[3] : "" });
+                            process.Clear();
+                        }
+                        break;
+                    case "?R":
+                        int key= int.Parse(processes[1]);
+                        foreach(Process i in items)
+                        {
+                            if (i.Pid == key){
+                                items.Remove(i);
+                                
+                                break;
+                            }
+                        }
+
+                        break;
+                    case "?A":
+                        process = processes[1].Split(',').ToList<string>();
                         items.Add(new Process() { Pid = int.Parse(process[0]), Name = process[1], cName = process.Count >= 3 ? process[2] : "", wName = process.Count >= 4 ? process[3] : "" });
-            
-                    //items.Add(new Process() { Pid = 123, Name = "zzzzzzzz", wName ="aaaaaaaaaaaa", cName ="aaaaaaaaaaaaaaa" });
+                        break;
+                    case "?F":
+                        process = processes[1].Split(',').ToList<string>();
+                        for (int i = 0; i < items.Count; i++)
+                        {
+                            
+                            if (int.Parse(process[0]) == items[i].Pid)
+                            {
+                                //ListViewItem someItem = (ListViewItem)lvProcess.Items[i];
+                                //someItem.Background = Brushes.DarkBlue;
+                                if (focusOn != -1)
+                                {
+                                    //someItem = (ListViewItem)items[i];
+                                    //someItem.Background = Brushes.Gray;
+                                }
+                                focusOn = i;
+                            }
+                           
+
+
+                        }
+                        
+
+                        break;
+                    default:
+                        break;
+
+
                 }
-           
+                processes.Clear();
+               
+
             }
 
         }
@@ -114,12 +165,8 @@ namespace PDS_progetto_client
 
                 sPanel.Children.Clear();
                 items = new ObservableCollection<Process>();
-    
-
-    
-
-            BindingOperations.EnableCollectionSynchronization(items, _stocksLock);
-        myGridView = new GridView();
+                BindingOperations.EnableCollectionSynchronization(items, _stocksLock);
+                myGridView = new GridView();
                 myGridView.AllowsColumnReorder = true;
                 myGridView.ColumnHeaderToolTip = "Process Information";
                 GridViewColumn gvc1 = new GridViewColumn();
