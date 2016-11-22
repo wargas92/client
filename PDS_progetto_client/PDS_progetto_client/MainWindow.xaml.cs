@@ -91,9 +91,11 @@ namespace PDS_progetto_client
             s.Connect(ipe);
             while (true)
             {
+                bR = true;
+                str.Remove(0,str.Length);
                 while (bR)
                 {
-                    bR = (s.Receive(bufferR, 0, 1024, 0) == 1024);
+                        bR = (s.Receive(bufferR, 0, 1024, 0) == 1024);
                     str = str + Encoding.UTF8.GetString(bufferR);
                 }
                 List<string> processes = str.Split('\n').ToList<string>();
